@@ -14,7 +14,7 @@ jobs:
           docker run --name test-container -p 8080:5000 -d ghcr.io/maubarnes/flexport-take-home:latest
       - name: Test Docker Image
         run: |
-          curl localhost:8080/health
+          curl -k localhost:8080/health
       - name: Cleanup Docker Test
         run: |
           docker kill test-container
