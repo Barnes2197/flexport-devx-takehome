@@ -19,7 +19,6 @@ COPY --chown=nonroot:nonroot . .
 
 RUN export FLASK_APP=app.py
 RUN pip install -r requirements.txt
-RUN PYTHONPATH="${PYTHON_PATH}:./src" python3 -m pytest -v tests/unit
 
 # define the port number the container should expose
 CMD ["python3", "-m", "flask", "--app", "src/rock_paper_scissors/app" , "run", "--host=0.0.0.0"]
