@@ -12,8 +12,6 @@ jobs:
         run: |
           docker build . --tag ghcr.io/maubarnes/flexport-take-home:latest
           docker run --name test-container -p 8080:5000 -d ghcr.io/maubarnes/flexport-take-home:latest
-      - name: Test Docker Image
-        run: |
           curl -X POST -H 'Content-Type: application/json' http://127.0.0.1:8080/rps -d '{"move": "Rock"}'
       - name: Cleanup Docker Test
         run: |
