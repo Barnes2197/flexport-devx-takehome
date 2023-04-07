@@ -1,6 +1,12 @@
 name: Build And Test Docker Image
 run-name: ${{ github.actor }} is Building Docker Image 🚀
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
 env:
   TEST_TAG: test
   LATEST_TAG: latest

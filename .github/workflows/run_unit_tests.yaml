@@ -1,6 +1,10 @@
 name: Run Unit Tests and Linters
 run-name: ${{ github.actor }} is linting Project 🚀
-on: [push]
+on:
+  push:
+  pull_request:
+    branches:
+    - main
 jobs:
   Lint-FlexPort-Project:
     runs-on: ubuntu-latest
