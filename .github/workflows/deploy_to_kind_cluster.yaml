@@ -1,11 +1,11 @@
-name: "Test an example service using Kind"
+name: "Deploy and run tests against kind cluster"
 
 on:
   workflow_run:
       workflows: ["Run Unit Tests and Linters", "Build And Test Docker Image"]
       types:
         - completed
-      branches: [main]
+#      branches: [main]
 jobs:
   kind:
     runs-on: ubuntu-latest
