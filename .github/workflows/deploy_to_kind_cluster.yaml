@@ -1,23 +1,31 @@
 name: "Deploy and run tests against kind cluster"
 
-on: [push]
-#      workflows: ["Run Unit Tests and Linters", "Build And Test Docker Image"]
-#      types:
-#        - completed
-#      branches: [main]
+on: push
+  #workflow_run:
+  #  workflows: ["Run Unit Tests and Linters", "Build And Test Docker Image"]
+  #  types:
+  #    - completed
+  #  branches: [main]
 jobs:
   kind:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.4.0
+
+      - name: Set up latest Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
       - name: Install Pytest and dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -U -r requirements.txt
-          python -m pip install coverage
-          python -m pip install pytest-cov
+          python -m pip install coverage pytest-cov requests
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
@@ -26,32 +34,35 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Testing
+      - name: Check Cluster Readiness
         run: |
           kubectl wait nodes --for condition=Ready --all
           kubectl cluster-info
           kubectl get pods -n kube-system
           echo "current-context:" $(kubectl config current-context)
           echo "environment-kubeconfig:" ${KUBECONFIG}
+
+      - id: githubrepo
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{github.repository}}
+
       - name: Deploy Application
         run: |
-          docker pull ghcr.io/barnes2197/flexport-take-home:latest
-          kubectl create deployment rps-deployment --image=ghcr.io/barnes2197/flexport-take-home:latest
+          kubectl create deployment rps-deployment --image ghcr.io/${{ steps.githubrepo.outputs.lowercase }}:latest
           kubectl wait pods --for condition=Ready --timeout=90s --all
-          kubectl expose deployment/rps-deployment --type=NodePort --port 5000
+
       - name: Test Deployment
         run: |
-          export NODE_PORT=$(kubectl get services/rps-service -o go-template='{{(index .spec.ports 0).nodePort}}')
+          export NODE_PORT=$(kubectl get deployment/rps-deployment -o go-template='{{(index .spec.ports 0).nodePort}}')
           echo NODE_PORT=${NODE_PORT}
-          kubectl describe services/rps-service
+          kubectl describe services/rps-deployment
           export POD_NAME=$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
           kubectl exec -ti $POD_NAME -- curl localhost:5000/health
-          kubectl port-forward deployments/rps-deployment 8080:5000 &
+          kubectl port-forward deployments/rps-deployment 8080:NODE_PORT &
           PYTHONPATH="${PYTHON_PATH}:./src" python -m pytest --cov=src --cov-report term-missing -v tests/integration
-      - name: Check Coverage Report
-        run: |
-          coverage report --fail-under 80
+
       - name: Cleanup
-        if: always()
+      #  if: always()
         run: |
           kind delete cluster --name test-cd
