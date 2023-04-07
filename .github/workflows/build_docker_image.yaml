@@ -33,7 +33,7 @@ jobs:
           
       - name: Test
         run: |
-          docker run --rm ${{ env.TEST_TAG }}
+          docker run --rm -d ${{ env.TEST_TAG }}
           
       - name: Build and push
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
