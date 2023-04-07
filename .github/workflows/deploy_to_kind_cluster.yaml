@@ -1,11 +1,11 @@
 name: "Deploy and run tests against kind cluster"
 
-on: push
-  #workflow_run:
-  #  workflows: ["Run Unit Tests and Linters", "Build And Test Docker Image"]
-  #  types:
-  #    - completed
-  #  branches: [main]
+on:
+  workflow_run:
+    workflows: ["Run Unit Tests and Linters", "Build And Test Docker Image"]
+    types:
+      - completed
+    branches: [main]
 jobs:
   kind:
     runs-on: ubuntu-latest
@@ -63,6 +63,6 @@ jobs:
           PYTHONPATH="${PYTHON_PATH}:./src" python -m pytest --cov=src --cov-report term-missing -v tests/integration
 
       - name: Cleanup
-      #  if: always()
+        if: always()
         run: |
           kind delete cluster --name test-cd

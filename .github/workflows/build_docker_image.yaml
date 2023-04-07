@@ -2,8 +2,8 @@ name: Build And Test Docker Image
 run-name: ${{ github.actor }} is Building Docker Image 🚀
 on: [push, pull_request]
 env:
-  TEST_TAG: ghcr.io/barnes2197/flexport-take-home:test
-  LATEST_TAG: ghcr.io/barnes2197/flexport-take-home:latest
+  TEST_TAG: test
+  LATEST_TAG: latest
 jobs:
   Build-Docker-Image:
     runs-on: ubuntu-latest
@@ -24,16 +24,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - id: githubrepo
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{github.repository}}
+
       - name: Build and export to Docker
         uses: docker/build-push-action@v4
         with:
           context: .
           load: true
-          tags: ${{ env.TEST_TAG }}
+          tags: ghcr.io/${{ steps.githubrepo.outputs.lowercase }}:${{ env.TEST_TAG }}
           
       - name: Test
         run: |
-          docker run --rm -d ${{ env.TEST_TAG }}
+          docker run --rm -d ghcr.io/${{ steps.githubrepo.outputs.lowercase }}:${{ env.TEST_TAG }}
           
       - name: Build and push
        # if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
@@ -42,7 +47,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ env.LATEST_TAG }}
+          tags: ghcr.io/${{ steps.githubrepo.outputs.lowercase }}:${{ env.LATEST_TAG }}
 
           
       
