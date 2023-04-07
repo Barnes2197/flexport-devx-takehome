@@ -1,6 +1,6 @@
 name: "Deploy and run tests against kind cluster"
 
-on: workflow_dispatch
+on: [push]
 #      workflows: ["Run Unit Tests and Linters", "Build And Test Docker Image"]
 #      types:
 #        - completed
