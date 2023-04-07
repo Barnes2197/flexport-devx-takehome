@@ -1,4 +1,4 @@
-name: Lint Project
+name: Run Unit Tests and Linters
 run-name: ${{ github.actor }} is linting Project 🚀
 on: [push]
 jobs:
@@ -41,7 +41,7 @@ jobs:
           python -m pip install pylint
       - name: Run All Tests With Coverage
         run: |
-          PYTHONPATH="${PYTHON_PATH}:./src" python -m pytest --cov=src --cov-report term-missing -v tests
+          PYTHONPATH="${PYTHON_PATH}:./src" python -m pytest --cov=src --cov-report term-missing -v --ignore tests/integration tests
       - name: Check Coverage is over 80%
         run: |
           coverage report --fail-under 80

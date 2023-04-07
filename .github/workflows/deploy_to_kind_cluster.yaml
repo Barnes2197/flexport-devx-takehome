@@ -1,0 +1,49 @@
+name: "Test an example service using Kind"
+
+on:
+  workflow_run:
+      workflows: ["Run Unit Tests and Linters", "Build And Test Docker Image"]
+      types:
+        - completed
+      branches: [main]
+jobs:
+  kind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.4.0
+      - name: Install Pytest and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -U -r requirements.txt
+          python -m pip install coverage
+          python -m pip install pytest-cov
+      - name: Testing
+        run: |
+          kubectl wait nodes --for condition=Ready --all
+          kubectl cluster-info
+          kubectl get pods -n kube-system
+          echo "current-context:" $(kubectl config current-context)
+          echo "environment-kubeconfig:" ${KUBECONFIG}
+      - name: Deploy Application
+        run: |
+          kubectl apply -f rps-deployment.yaml
+          kubectl wait pods --for condition=Ready --timeout=90s --all
+          kubectl expose deployment/rps-deployment --type=NodePort --port 5000
+      - name: Test Deployment
+        run: |
+          export NODE_PORT=$(kubectl get services/rps-service -o go-template='{{(index .spec.ports 0).nodePort}}')
+          echo NODE_PORT=${NODE_PORT}
+          kubectl describe services/rps-service
+          export POD_NAME=$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+          kubectl exec -ti $POD_NAME -- curl localhost:5000/health
+          kubectl port-forward deployments/rps-deployment 8080:5000 &
+          PYTHONPATH="${PYTHON_PATH}:./src" python -m pytest --cov=src --cov-report term-missing -v tests/integration
+      - name: Check Coverage Report
+        run: |
+          coverage report --fail-under 80
+      - name: Cleanup
+        if: always()
+        run: |
+          kind delete cluster --name test-cd

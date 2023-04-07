@@ -1,9 +1,9 @@
 name: Build And Test Docker Image
 run-name: ${{ github.actor }} is Building Docker Image 🚀
-on: [push]
+on: [push, pull_request]
 env:
-  TEST_TAG: user/app:test
-  LATEST_TAG: user/app:latest
+  TEST_TAG: ghcr.io/barnes2197/flexport-take-home:test
+  LATEST_TAG: ghcr.io/barnes2197/flexport-take-home:latest
 jobs:
   Build-Docker-Image:
     runs-on: ubuntu-latest

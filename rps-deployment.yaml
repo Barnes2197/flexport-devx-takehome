@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rps-deployment
+  labels:
+    app: RPS-Api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: RPS-Api
+  template:
+    metadata:
+      labels:
+        app: RPS-Api
+    spec:
+      containers:
+        - name: rps
+          image: pydoc:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rps-service
+spec:
+  ports:
+  - port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: rps-api
+  type: LoadBalancer
