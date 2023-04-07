@@ -34,7 +34,9 @@ jobs:
       - name: Test
         run: |
           docker run --rm ${{ env.TEST_TAG }}
+          
       - name: Build and push
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v4
         with:
           context: .
