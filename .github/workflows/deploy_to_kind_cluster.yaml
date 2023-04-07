@@ -36,8 +36,7 @@ jobs:
       - name: Deploy Application
         run: |
           docker pull ghcr.io/barnes2197/flexport-take-home:latest
-          kind load docker-image ghcr.io/barnes2197/flexport-take-home:latest
-          kubectl apply -f rps-deployment.yaml
+          kubectl create deployment image=ghcr.io/barnes2197/flexport-take-home:latest
           kubectl wait pods --for condition=Ready --timeout=90s --all
           kubectl expose deployment/rps-deployment --type=NodePort --port 5000
       - name: Test Deployment
